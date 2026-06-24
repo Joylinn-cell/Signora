@@ -422,7 +422,7 @@ export default function Signora() {
         </div>
 
         {/* ── 3-COLUMN GRID ── */}
-        <div style={{flex:1,minHeight:0,display:"grid",gridTemplateColumns:"1fr 1.05fr 1fr",gap:12}}>
+        <div style={{flex:1,minHeight:0,display:"grid",gridTemplateColumns:"0.9fr 1.4fr 0.9fr",gap:12}}>
 
           {/* ══ LEFT: COMMUNICATION ══ */}
           <Card accent="#c4b5fd">
@@ -457,25 +457,6 @@ export default function Signora() {
               <span style={{position:"absolute",bottom:6,right:8,fontSize:"1rem"}}>❤️</span>
             </div>
 
-            <Pill bg="#dbeafe" style={{alignSelf:"flex-start"}}>
-              🔊 Speaker <span style={{fontWeight:400,fontSize:".78rem"}}>(Malayalam)</span>
-            </Pill>
-            <div style={{
-              border:"1.5px solid #e5e7eb",borderRadius:12,padding:"8px 12px",
-              display:"flex",alignItems:"center",gap:10,background:"#f9fafb",flexShrink:0
-            }}>
-              <div style={{width:38,height:38,borderRadius:"50%",background:"#a78bfa",
-                display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem",flexShrink:0}}>🔊</div>
-              <Waveform active={camActive && handDetected}/>
-            </div>
-
-            <button className="speak-btn" onClick={speak} style={{
-              display:"flex",alignItems:"center",justifyContent:"center",gap:6,
-              background:"#7c3aed",color:"white",border:"2.5px solid #2d2d3a",borderRadius:999,
-              padding:"9px",fontFamily:"'Baloo 2',cursive",fontSize:"1.08rem",fontWeight:800,
-              cursor:"pointer",boxShadow:"3px 3px 0 #2d2d3a",
-              transition:"transform .1s,box-shadow .1s",flexShrink:0
-            }}>▶ Speak</button>
 
             <div style={{position:"absolute",bottom:10,left:10,fontSize:".8rem",color:"#fde68a",opacity:.8,pointerEvents:"none"}}>♩ ♪ ♫</div>
           </Card>
@@ -493,7 +474,7 @@ export default function Signora() {
             </CardTitle>
 
             <div style={{
-              flex:1,minHeight:0,border:"2.5px solid #2d2d3a",borderRadius:14,
+              flex:1,minHeight:"480px",border:"2.5px solid #2d2d3a",borderRadius:14,
               overflow:"hidden",position:"relative",background:"#1a1a2e"
             }}>
               {[{top:8,right:9,borderWidth:"2.5px 2.5px 0 0",borderRadius:"0 4px 0 0"},
@@ -573,38 +554,9 @@ export default function Signora() {
               }
             </div>
 
-            <div style={{border:"2px dashed #f9a8d4",borderRadius:14,padding:"8px 12px",
-              textAlign:"center",background:"white",flexShrink:0}}>
-              <span style={{display:"inline-block",border:"1.5px solid #2d2d3a",borderRadius:999,
-                background:"#dbeafe",padding:"2px 12px",fontFamily:"'Patrick Hand',cursive",
-                fontSize:".84rem",fontWeight:700,marginBottom:5}}>Detected Sign</span>
-              <div className={wordAnim?"word-pop":""} style={{
-                fontFamily:"'Baloo 2',cursive",fontSize:"2.1rem",fontWeight:900,color:"#7c3aed",
-                display:"flex",alignItems:"center",justifyContent:"center",gap:8
-              }}>
-                <span style={{fontSize:".9rem",color:"#fde68a"}}>꩜</span>
-                {current.word}
-                <span style={{fontSize:".9rem",color:"#fde68a"}}>꩜</span>
-              </div>
-              <div style={{fontFamily:"'Patrick Hand',cursive",fontSize:".82rem",color:"#6b7280",
-                display:"flex",alignItems:"center",justifyContent:"center",gap:4,marginTop:2}}>
-                {handDetected
-                  ? <span style={{color:"#4ade80",fontWeight:700}}>✓ Hand tracking active</span>
-                  : <span>Show your hand to the camera… ♡</span>
-                }
-              </div>
-            </div>
+            
 
-            {features.length > 0 && (
-              <div style={{
-                background:"#f0fdf4",border:"1.5px solid #4ade80",borderRadius:10,
-                padding:"4px 10px",fontFamily:"'Patrick Hand',cursive",fontSize:".8rem",
-                color:"#166534",display:"flex",alignItems:"center",gap:6,flexShrink:0
-              }}>
-                <span style={{width:8,height:8,borderRadius:"50%",background:"#4ade80",flexShrink:0}}/>
-                {features.length} features captured (21 pts × xyz) — ready for model
-              </div>
-            )}
+            
 
             <div style={{display:"flex",justifyContent:"flex-end",flexShrink:0}}>
               <svg width="52" height="52" viewBox="0 0 52 52">
@@ -676,24 +628,7 @@ export default function Signora() {
             </div>
 
             <div style={{flex:1,minHeight:0}}>
-              <Pill bg="#fce7f3">Reason <span style={{fontWeight:400}}>(Model Interpretation)</span></Pill>
-              <div style={{border:"1.5px dashed #fca5a5",borderRadius:12,
-                padding:"8px 12px",background:"#fff8f8",marginTop:5}}>
-                {(handDetected ? [
-                  `${features.length} landmark values extracted`,
-                  `Gesture most similar to ${current.word} training data`,
-                  "Connect backend to get real prediction"
-                ] : [
-                  "Waiting for hand in frame…",
-                  "MediaPipe tracking ready",
-                  "Show hand to camera to extract landmarks"
-                ]).map((r,i)=>(
-                  <div key={i} style={{fontFamily:"'Patrick Hand',cursive",fontSize:".9rem",
-                    lineHeight:1.4,color:"#1e1b4b",paddingLeft:13,position:"relative",marginBottom:i<2?5:0}}>
-                    <span style={{position:"absolute",left:2,color:"#fb7185"}}>•</span>{r}
-                  </div>
-                ))}
-              </div>
+              
             </div>
 
             <div style={{display:"flex",justifyContent:"flex-end",flexShrink:0}}>

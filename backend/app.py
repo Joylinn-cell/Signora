@@ -1,8 +1,8 @@
-from flask import Flask, request, send_file
+from flask import Flask, request
 from flask_cors import CORS
 
 from translator import translate_to_malayalam
-from speaker import create_audio
+
 from sign_map import SIGN_MAP
 from predictor import predict_sign
 from explanation import get_explanation
@@ -39,18 +39,7 @@ def translate():
 # -----------------------------------
 # CREATE AUDIO
 # -----------------------------------
-@app.route("/speak", methods=["POST"])
-def speak():
 
-    data = request.json
-
-    text = data["text"]
-
-    create_audio(text)
-
-    return {
-        "message": "Audio Created"
-    }
 
 
 # -----------------------------------
@@ -72,32 +61,16 @@ def process():
         english
     )
 
-    create_audio(
-        malayalam
-    )
-
     return {
-
         "sign": sign,
-
         "english": english,
-
-        "malayalam": malayalam,
-
-        "audio": "output.mp3"
+        "malayalam": malayalam
     }
 
 
 # -----------------------------------
 # AUDIO ROUTE
 # -----------------------------------
-@app.route("/audio")
-def audio():
-
-    return send_file(
-        "output.mp3",
-        mimetype="audio/mpeg"
-    )
 
 
 # -----------------------------------
@@ -122,17 +95,13 @@ def predict():
         english
     )
 
-    try:
-        create_audio(malayalam)
-    except Exception as e:
-        print(f"Audio skipped: {e}")
+    
 
     explanation = get_explanation(english)
 
     return {
         "english": english,
         "malayalam": malayalam,
-        "audio": "output.mp3",
         "explanation": explanation
     }
 if __name__ == "__main__":
