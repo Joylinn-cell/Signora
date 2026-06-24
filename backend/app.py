@@ -1,17 +1,15 @@
 from flask import Flask, request, send_file
+from flask_cors import CORS
 
 from translator import translate_to_malayalam
 from speaker import create_audio
 from sign_map import SIGN_MAP
-
 from predictor import predict_sign
 from explanation import get_explanation
-from flask_cors import CORS
 import numpy as np
 
 app = Flask(__name__)
-CORS(app)
-
+CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])  
 @app.route("/")
 def home():
 
@@ -114,33 +112,28 @@ def predict():
         data["features"]
     )
 
-    english = predict_sign(
-        features
-    )
+    print("Received features length:", len(features))
+
+    english = predict_sign(features)
+
+    print("Predicted sign:", english)
 
     malayalam = translate_to_malayalam(
         english
     )
 
-    create_audio(
-        malayalam
-    )
+    try:
+        create_audio(malayalam)
+    except Exception as e:
+        print(f"Audio skipped: {e}")
 
-    explanation = get_explanation(
-        english
-    )
+    explanation = get_explanation(english)
 
     return {
-
         "english": english,
-
         "malayalam": malayalam,
-
         "audio": "output.mp3",
-
         "explanation": explanation
     }
-
-
 if __name__ == "__main__":
     app.run(debug=True)

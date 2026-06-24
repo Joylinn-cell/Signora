@@ -149,7 +149,7 @@ export default function Signora() {
   const handsRef  = useRef(null);
   const rafRef    = useRef(null);
   const camActiveRef = useRef(false); // ← ref so processFrame always sees current value
-
+  const lastPredictRef = useRef(0);
   /* ── MediaPipe setup ── */
   function initMediaPipe() {
     // ✅ FIX: use window.Hands (loaded from index.html <script> tag)
@@ -180,7 +180,6 @@ export default function Signora() {
         const fingerColors = ["#f87171","#fb923c","#facc15","#4ade80","#60a5fa"];
         const fingerOf = (i) => i === 0 ? 0 : Math.ceil(i / 4) - 1;
  
-        // loop over every detected hand (up to 2)
         results.multiHandLandmarks.forEach((lms) => {
           window.drawConnectors(ctx, lms, window.HAND_CONNECTIONS, {
             color: "#a78bfa",
@@ -216,6 +215,31 @@ export default function Signora() {
         setFeatures(flat);
         setLandmarks(primaryLms);
         setHandDetected(true);
+
+        // throttle: only predict every 2 seconds
+        const now = Date.now();
+        if (now - lastPredictRef.current > 2000) {
+          lastPredictRef.current = now;
+          fetch("http://localhost:5000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ features: flat }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              console.log("Backend returned:", data);
+              const matched = SIGNS.find(
+                (s) => s.word.toLowerCase() === data.english.toLowerCase()
+              );
+              if (matched) {
+                setCurrent({
+                  ...matched,
+                  ml: data.malayalam
+                });
+              }
+            })
+            .catch(() => {});
+        }
       } else {
         setHandDetected(false);
         setLandmarks([]);
