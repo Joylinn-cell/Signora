@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+//import * as mpHands from "@mediapipe/hands";
 
+//import {
+ // drawConnectors,
+  //drawLandmarks
+//} from "@mediapipe/drawing_utils";
 /* ══════════════════════════════════════════════
    HAND GESTURE SVGs — one per sign
    All drawn as clean anatomical hand silhouettes
@@ -383,10 +388,12 @@ function Donut({ pct }) {
    ══════════════════════════════════════════════ */
 export default function Signora() {
   const [current, setCurrent] = useState(SIGNS[0]);
+  const [features, setFeatures] = useState([]);
   const [camActive, setCamActive] = useState(false);
   const [camMode, setCamMode]   = useState("idle");
   const [wordAnim, setWordAnim] = useState(false);
   const videoRef  = useRef(null);
+  //const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const timerRef  = useRef(null);
   const idxRef    = useRef(1);
@@ -406,10 +413,78 @@ export default function Signora() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       streamRef.current = stream;
-      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
+      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); 
+        //initializeHandTracking();
+         }
       setCamMode("live");
     } catch { setCamMode("demo"); }
   }
+  /*function initializeHandTracking() {
+
+  const hands = new mpHands.Hands({
+    locateFile: (file) =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+  });
+
+  hands.setOptions({
+    maxNumHands: 1,
+    minDetectionConfidence: 0.7,
+    minTrackingConfidence: 0.7,
+  });
+
+  hands.onResults((results) => {
+
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    if (results.multiHandLandmarks) {
+
+      const landmarks =
+        results.multiHandLandmarks[0];
+
+      drawConnectors(
+        ctx,
+        landmarks,
+        mpHands.HAND_CONNECTIONS
+      );
+
+      drawLandmarks(
+        ctx,
+        landmarks
+      );
+
+      let arr = [];
+
+      landmarks.forEach((lm) => {
+
+        arr.push(lm.x);
+        arr.push(lm.y);
+        arr.push(lm.z);
+
+      });
+
+      setFeatures(arr);
+
+      console.log(
+        "Features:",
+        arr.length
+      );
+
+    }
+
+  });
+
+}*/
 
   function stopCam() {
     setCamActive(false); setCamMode("idle");
