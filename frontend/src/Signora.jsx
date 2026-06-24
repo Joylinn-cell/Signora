@@ -1,321 +1,69 @@
 import { useState, useEffect, useRef } from "react";
-//import * as mpHands from "@mediapipe/hands";
 
-//import {
- // drawConnectors,
-  //drawLandmarks
-//} from "@mediapipe/drawing_utils";
 /* ══════════════════════════════════════════════
-   HAND GESTURE SVGs — one per sign
-   All drawn as clean anatomical hand silhouettes
+   IMAGE PLACEHOLDER — fallback when image missing
    ══════════════════════════════════════════════ */
-
-const skin = "#FDDBB4";
-const skinD = "#F0B97A";
-const outline = "#3D2B1F";
-const nail = "#F8E0D0";
-
-/* shared palm base */
-const Palm = ({ cx = 60, cy = 120, w = 64, h = 60 }) => (
-  <>
-    <ellipse cx={cx} cy={cy} rx={w / 2} ry={h / 2} fill={skin} stroke={outline} strokeWidth="2.2" />
-    <ellipse cx={cx} cy={cy + 10} rx={w / 2 - 2} ry={h / 2 - 8} fill={skinD} stroke="none" opacity="0.25" />
-  </>
-);
-
-/* finger helper */
-const Finger = ({ x, y, w = 16, h = 48, rx = 8, rotate = 0, cx, cy }) => (
-  <g transform={`rotate(${rotate},${cx ?? x + w / 2},${cy ?? y + h})`}>
-    <rect x={x} y={y} width={w} height={h} rx={rx} fill={skin} stroke={outline} strokeWidth="2" />
-    <rect x={x + 3} y={y + h - 12} width={w - 6} height={10} rx={4} fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-    {/* knuckle lines */}
-    <line x1={x + 3} y1={y + h * 0.35} x2={x + w - 3} y2={y + h * 0.35} stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-    <line x1={x + 3} y1={y + h * 0.6} x2={x + w - 3} y2={y + h * 0.6} stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-  </g>
-);
-
-/* HELLO – open flat hand, all 5 fingers spread */
-function HandHello() {
+function HandPlaceholder({ word }) {
   return (
-    <svg viewBox="0 0 120 180" width="90" height="135">
-      <ellipse cx="60" cy="128" rx="38" ry="44" fill={skin} stroke={outline} strokeWidth="2.2" />
-      <Finger x={13} y={58} w={15} h={52} rotate={-14} cx={20} cy={110} />
-      <Finger x={31} y={42} w={16} h={58} rotate={-5} cx={39} cy={100} />
-      <Finger x={51} y={40} w={16} h={58} rotate={3} cx={59} cy={98} />
-      <Finger x={71} y={44} w={15} h={54} rotate={11} cx={78} cy={98} />
-      {/* thumb */}
-      <path d="M22 100 C10 90,4 76,8 64 C12 52,24 50,30 62 L32 90Z" fill={skin} stroke={outline} strokeWidth="2" strokeLinejoin="round" />
-      <rect x="14" y="52" width="12" height="10" rx="5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-    </svg>
+    <div style={{
+      width: 90, height: 120,
+      border: "2px dashed #c4b5fd", borderRadius: 14,
+      background: "#f5f3ff", display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0,
+    }}>
+      <span style={{ fontSize: "1.6rem", opacity: 0.4 }}>🖼️</span>
+      <span style={{ fontFamily: "'Patrick Hand', cursive", fontSize: "0.72rem",
+        color: "#9c6bcc", textAlign: "center", lineHeight: 1.3, padding: "0 6px" }}>
+        {word}<br />
+        <span style={{ color: "#c4b5fd", fontSize: "0.65rem" }}>image here</span>
+      </span>
+    </div>
   );
 }
 
-/* YES – fist with nodding motion lines */
-function HandYes() {
+/* ══════════════════════════════════════════════
+   SIGN IMAGE — shows image or falls back to placeholder
+   ══════════════════════════════════════════════ */
+function SignImage({ word }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <HandPlaceholder word={word} />;
   return (
-    <svg viewBox="0 0 120 160" width="90" height="120">
-      <ellipse cx="60" cy="110" rx="36" ry="40" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* folded fingers shown as rounded row */}
-      <rect x="26" y="82" width="68" height="24" rx="12" fill={skin} stroke={outline} strokeWidth="2" />
-      <line x1="44" y1="82" x2="44" y2="106" stroke={skinD} strokeWidth="1.5" opacity="0.4" />
-      <line x1="60" y1="82" x2="60" y2="106" stroke={skinD} strokeWidth="1.5" opacity="0.4" />
-      <line x1="76" y1="82" x2="76" y2="106" stroke={skinD} strokeWidth="1.5" opacity="0.4" />
-      {/* fingernails peeking */}
-      <ellipse cx="35" cy="83" rx="5" ry="3.5" fill={nail} opacity="0.7" />
-      <ellipse cx="52" cy="81" rx="5" ry="3.5" fill={nail} opacity="0.7" />
-      <ellipse cx="68" cy="81" rx="5" ry="3.5" fill={nail} opacity="0.7" />
-      <ellipse cx="84" cy="83" rx="5" ry="3.5" fill={nail} opacity="0.7" />
-      {/* thumb wrapping */}
-      <path d="M26 96 C16 92,14 80,20 74 C26 68,34 72,34 82Z" fill={skin} stroke={outline} strokeWidth="2" strokeLinejoin="round" />
-      {/* motion lines */}
-      <line x1="100" y1="70" x2="112" y2="66" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-      <line x1="102" y1="80" x2="116" y2="80" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-      <line x1="100" y1="90" x2="112" y2="94" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-    </svg>
+    <img
+      src={`/signs/${word.toLowerCase()}.png`}
+      alt={word}
+      onError={() => setFailed(true)}
+      style={{ width: 90, height: 120, objectFit: "contain", flexShrink: 0 }}
+    />
   );
 }
-
-/* NO – index finger wagging left-right */
-function HandNo() {
-  return (
-    <svg viewBox="0 0 140 180" width="105" height="135">
-      <ellipse cx="62" cy="130" rx="36" ry="40" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* folded fingers */}
-      <rect x="38" y="108" width="52" height="20" rx="10" fill={skin} stroke={outline} strokeWidth="2" />
-      <line x1="54" y1="108" x2="54" y2="128" stroke={skinD} strokeWidth="1.2" opacity="0.4" />
-      <line x1="70" y1="108" x2="70" y2="128" stroke={skinD} strokeWidth="1.2" opacity="0.4" />
-      {/* index finger pointing up & slightly right */}
-      <g transform="rotate(12,56,108)">
-        <rect x="47" y="50" width="18" height="60" rx="9" fill={skin} stroke={outline} strokeWidth="2.2" />
-        <rect x="50" y="97" width="12" height="11" rx="5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-        <line x1="50" y1="73" x2="63" y2="73" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-        <line x1="50" y1="86" x2="63" y2="86" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      </g>
-      {/* thumb */}
-      <path d="M28 120 C18 114,16 100,22 94 C28 88,36 92,36 104Z" fill={skin} stroke={outline} strokeWidth="2" strokeLinejoin="round" />
-      {/* wagging arcs */}
-      <path d="M80 58 Q100 46 114 58" fill="none" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 3" opacity="0.8" />
-      <path d="M80 58 Q62 44 50 58" fill="none" stroke="#fb7185" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 3" opacity="0.8" />
-    </svg>
-  );
-}
-
-/* FOOD – fingertips touch thumb, brought to mouth gesture */
-function HandFood() {
-  return (
-    <svg viewBox="0 0 120 180" width="90" height="135">
-      <ellipse cx="60" cy="126" rx="38" ry="44" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* four fingers bunched together pointing up */}
-      {[18, 33, 49, 64].map((x, i) => (
-        <g key={i} transform={`rotate(${[-6,-2,2,6][i]},${x+8},126)`}>
-          <rect x={x} y={62} width={15} height={50} rx={7.5} fill={skin} stroke={outline} strokeWidth="2" />
-          <rect x={x+3} y={99} width={9} height={9} rx={4} fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-          <line x1={x+3} y1={79} x2={x+12} y2={79} stroke={skinD} strokeWidth="1.1" strokeLinecap="round" opacity="0.5" />
-        </g>
-      ))}
-      {/* thumb touching index tip */}
-      <path d="M26 110 C14 100,12 84,20 76 C26 70,36 74,36 86 C36 96,26 100,22 106Z" fill={skin} stroke={outline} strokeWidth="2" strokeLinejoin="round" />
-      <ellipse cx="19" cy="74" rx="6" ry="4.5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      {/* contact dot at pinch */}
-      <circle cx="28" cy="80" r="4" fill="#fde68a" stroke="#fb923c" strokeWidth="1.5" opacity="0.9" />
-    </svg>
-  );
-}
-
-/* WATER – W handshape: index, middle, ring up, others folded */
-function HandWater() {
-  return (
-    <svg viewBox="0 0 120 180" width="90" height="135">
-      <ellipse cx="60" cy="130" rx="36" ry="40" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* index up */}
-      <rect x="30" y="60" width="16" height="58" rx="8" fill={skin} stroke={outline} strokeWidth="2.2" />
-      <rect x="33" y="104" width="10" height="11" rx="5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      <line x1="33" y1="80" x2="44" y2="80" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      <line x1="33" y1="94" x2="44" y2="94" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      {/* middle up */}
-      <rect x="50" y="55" width="16" height="62" rx="8" fill={skin} stroke={outline} strokeWidth="2.2" />
-      <rect x="53" y="104" width="10" height="11" rx="5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      <line x1="53" y1="78" x2="64" y2="78" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      <line x1="53" y1="92" x2="64" y2="92" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      {/* ring up */}
-      <rect x="70" y="60" width="16" height="58" rx="8" fill={skin} stroke={outline} strokeWidth="2.2" />
-      <rect x="73" y="104" width="10" height="11" rx="5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      <line x1="73" y1="80" x2="84" y2="80" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      <line x1="73" y1="94" x2="84" y2="94" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      {/* pinky folded */}
-      <rect x="88" y="108" width="14" height="20" rx="7" fill={skin} stroke={outline} strokeWidth="1.8" />
-      {/* thumb across */}
-      <path d="M28 118 C16 110,16 96,24 90 C30 86,36 92,34 102Z" fill={skin} stroke={outline} strokeWidth="2" strokeLinejoin="round" />
-      {/* water drop */}
-      <path d="M60 20 C60 20,46 36,46 46 C46 54,52 60,60 60 C68 60,74 54,74 46 C74 36,60 20,60 20Z" fill="#93c5fd" stroke="#3b82f6" strokeWidth="1.5" opacity="0.85" />
-    </svg>
-  );
-}
-
-/* PAIN – fist clenched, knuckles forward */
-function HandPain() {
-  return (
-    <svg viewBox="0 0 120 160" width="90" height="120">
-      <ellipse cx="60" cy="108" rx="38" ry="40" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* knuckle row */}
-      <rect x="24" y="80" width="72" height="26" rx="13" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* knuckle bumps */}
-      {[36, 52, 68, 84].map((cx, i) => (
-        <ellipse key={i} cx={cx} cy={80} rx={7} ry={5} fill={skin} stroke={outline} strokeWidth="1.8" />
-      ))}
-      {/* finger dividers */}
-      {[48, 64, 80].map((x, i) => (
-        <line key={i} x1={x} y1={80} x2={x} y2={106} stroke={skinD} strokeWidth="1.3" opacity="0.4" />
-      ))}
-      {/* thumb tucked */}
-      <path d="M24 102 C14 98,12 86,18 80 C24 75,32 80,30 92Z" fill={skin} stroke={outline} strokeWidth="2" strokeLinejoin="round" />
-      {/* pain burst */}
-      {[[106, 48, 18], [112, 64, 10], [108, 78, 14], [116, 52, 8]].map(([x, y, r], i) => (
-        <g key={i}>
-          <circle cx={x} cy={y} r={r} fill="#fde68a" stroke="#fb923c" strokeWidth="1.5" opacity="0.85" />
-          <text x={x} y={y + 5} textAnchor="middle" fontSize="10" fill="#c2410c" fontWeight="bold">!</text>
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-/* HELP – one flat hand on top of fist (thumbs-up lift) */
-function HandHelp() {
-  return (
-    <svg viewBox="0 0 130 190" width="97" height="142">
-      {/* bottom fist */}
-      <ellipse cx="62" cy="148" rx="38" ry="28" fill={skin} stroke={outline} strokeWidth="2.2" />
-      <rect x="28" y="130" width="68" height="22" rx="11" fill={skin} stroke={outline} strokeWidth="2" />
-      {[42, 58, 74, 90].map((x, i) => (
-        <ellipse key={i} cx={x} cy={130} rx={6.5} ry={4.5} fill={skin} stroke={outline} strokeWidth="1.8" />
-      ))}
-      {/* flat hand on top */}
-      <ellipse cx="64" cy="110" rx="40" ry="18" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* four fingers of top hand */}
-      {[28, 43, 58, 73].map((x, i) => (
-        <g key={i} transform={`rotate(${[-4,-1,1,4][i]},${x+8},110)`}>
-          <rect x={x} y={68} width={15} height={44} rx={7.5} fill={skin} stroke={outline} strokeWidth="2" />
-          <rect x={x+3} y={99} width={9} height={9} rx={4} fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-        </g>
-      ))}
-      {/* thumb of top hand */}
-      <path d="M26 106 C16 100,16 88,22 83 C28 78,36 84,34 96Z" fill={skin} stroke={outline} strokeWidth="2" strokeLinejoin="round" />
-      {/* upward arrows */}
-      <path d="M108 140 L108 120 M104 126 L108 120 L112 126" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-      <path d="M118 145 L118 128 M114 134 L118 128 L122 134" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.65" />
-    </svg>
-  );
-}
-
-/* TOILET – T handshape: thumb between index and middle */
-function HandToilet() {
-  return (
-    <svg viewBox="0 0 120 180" width="90" height="135">
-      <ellipse cx="60" cy="128" rx="36" ry="42" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* all four fingers folded over */}
-      <rect x="30" y="100" width="60" height="26" rx="13" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {[44, 58, 72].map((x, i) => (
-        <line key={i} x1={x} y1={100} x2={x} y2={126} stroke={skinD} strokeWidth="1.3" opacity="0.4" />
-      ))}
-      {/* fingernail tops */}
-      {[36, 52, 68, 82].map((cx, i) => (
-        <ellipse key={i} cx={cx} cy={100} rx={6} ry={4} fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      ))}
-      {/* thumb poking between index & middle */}
-      <path d="M52 108 C48 92,50 78,56 72 C62 66,70 70,68 82 C66 92,58 100,54 108Z" fill={skin} stroke={outline} strokeWidth="2.2" strokeLinejoin="round" />
-      <ellipse cx="62" cy="70" rx="6.5" ry="4.5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      {/* T letter badge */}
-      <rect x="82" y="56" width="30" height="30" rx="8" fill="#dbeafe" stroke="#93c5fd" strokeWidth="2" />
-      <text x="97" y="77" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#1d4ed8" fontFamily="sans-serif">T</text>
-    </svg>
-  );
-}
-
-/* DOCTOR – D handshape: index up, others curl, thumb touches middle */
-function HandDoctor() {
-  return (
-    <svg viewBox="0 0 120 190" width="90" height="142">
-      <ellipse cx="60" cy="138" rx="36" ry="40" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* curled fingers */}
-      <rect x="44" y="110" width="52" height="24" rx="12" fill={skin} stroke={outline} strokeWidth="2" />
-      {[56, 70, 84].map((x, i) => (
-        <ellipse key={i} cx={x} cy={110} rx={6} ry={4} fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      ))}
-      {/* index finger pointing up */}
-      <rect x="32" y="58" width="18" height="64" rx="9" fill={skin} stroke={outline} strokeWidth="2.2" />
-      <rect x="35" y="108" width="12" height="11" rx="5.5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      <line x1="35" y1="80" x2="48" y2="80" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      <line x1="35" y1="94" x2="48" y2="94" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      {/* thumb touching middle */}
-      <path d="M30 120 C18 112,18 96,24 90 C30 84,40 88,38 100 C38 110,32 116,28 120Z" fill={skin} stroke={outline} strokeWidth="2" strokeLinejoin="round" />
-      {/* medical cross */}
-      <rect x="82" y="52" width="32" height="32" rx="8" fill="#fce7f3" stroke="#f9a8d4" strokeWidth="2" />
-      <rect x="93" y="58" width="10" height="20" rx="3" fill="#fb7185" opacity="0.9" />
-      <rect x="87" y="64" width="22" height="10" rx="3" fill="#fb7185" opacity="0.9" />
-    </svg>
-  );
-}
-
-/* ILY – thumb + index + pinky extended */
-function HandILY() {
-  return (
-    <svg viewBox="0 0 120 180" width="90" height="135">
-      <ellipse cx="60" cy="130" rx="38" ry="42" fill={skin} stroke={outline} strokeWidth="2.2" />
-      {/* index finger up */}
-      <rect x="34" y="58" width="17" height="62" rx="8.5" fill={skin} stroke={outline} strokeWidth="2.2" />
-      <rect x="37" y="106" width="11" height="11" rx="5.5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      <line x1="37" y1="80" x2="49" y2="80" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      <line x1="37" y1="94" x2="49" y2="94" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      {/* middle & ring folded */}
-      <rect x="53" y="106" width="30" height="22" rx="11" fill={skin} stroke={outline} strokeWidth="2" />
-      {[61, 75].map((cx, i) => (
-        <ellipse key={i} cx={cx} cy={106} rx={6} ry={4} fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      ))}
-      <line x1="68" y1="106" x2="68" y2="128" stroke={skinD} strokeWidth="1.3" opacity="0.35" />
-      {/* pinky up */}
-      <rect x="85" y="64" width="16" height="56" rx="8" fill={skin} stroke={outline} strokeWidth="2.2" />
-      <rect x="88" y="107" width="10" height="10" rx="5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      <line x1="88" y1="84" x2="99" y2="84" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      <line x1="88" y1="97" x2="99" y2="97" stroke={skinD} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
-      {/* thumb extended out */}
-      <path d="M22 122 C10 114,8 96,14 88 C20 80,32 84,30 100 C28 112,22 118,20 124Z" fill={skin} stroke={outline} strokeWidth="2.2" strokeLinejoin="round" />
-      <ellipse cx="13" cy="86" rx="6.5" ry="4.5" fill={nail} stroke={skinD} strokeWidth="1" opacity="0.7" />
-      {/* sparkle */}
-      <text x="56" y="46" fontSize="18" textAnchor="middle" fill="#fb7185">♥</text>
-    </svg>
-  );
-}
-
-/* map sign word → gesture component */
-const GESTURE_MAP = {
-  HELLO:  <HandHello />,
-  YES:    <HandYes />,
-  NO:     <HandNo />,
-  FOOD:   <HandFood />,
-  WATER:  <HandWater />,
-  PAIN:   <HandPain />,
-  HELP:   <HandHelp />,
-  TOILET: <HandToilet />,
-  DOCTOR: <HandDoctor />,
-};
 
 /* ══════════════════════════════════════════════
    DATA
    ══════════════════════════════════════════════ */
 const SIGNS = [
-  { word:"FOOD",   en:"I need food",        ml:"എനിക്ക് ഭക്ഷണം വേണം",      conf:82 },
-  { word:"WATER",  en:"I need water",       ml:"എനിക്ക് വെള്ളം വേണം",       conf:91 },
-  { word:"PAIN",   en:"I am in pain",       ml:"എനിക്ക് വേദനയുണ്ട്",        conf:78 },
-  { word:"HELP",   en:"Please help me",     ml:"ദയവായി എന്നെ സഹായിക്കൂ",    conf:95 },
-  { word:"HELLO",  en:"Hello",              ml:"നമസ്കാരം",                  conf:97 },
-  { word:"TOILET", en:"I need the toilet",  ml:"എനിക്ക് ടോയ്‌ലറ്റ് വേണം",  conf:88 },
-  { word:"DOCTOR", en:"I need a doctor",    ml:"എനിക്ക് ഒരു ഡോക്ടർ വേണം",  conf:85 },
-  { word:"YES",    en:"Yes",                ml:"അതെ",                       conf:99 },
-  { word:"NO",     en:"No",                 ml:"അല്ല",                      conf:96 },
+  { word: "ACCIDENT", en: "There was an accident",   ml: "ഒരു അപകടം ഉണ്ടായി",           conf: 84 },
+  { word: "BED",      en: "I need a bed",            ml: "എനിക്ക് ഒരു കിടക്ക വേണം",      conf: 90 },
+  { word: "DOCTOR",   en: "I need a doctor",         ml: "എനിക്ക് ഒരു ഡോക്ടർ വേണം",     conf: 85 },
+  { word: "DRINK",    en: "I want a drink",          ml: "എനിക്ക് കുടിക്കാൻ വേണം",       conf: 88 },
+  { word: "EAT",      en: "I want to eat",           ml: "എനിക്ക് കഴിക്കണം",             conf: 92 },
+  { word: "FINE",     en: "I am fine",               ml: "ഞാൻ സുഖമാണ്",                 conf: 97 },
+  { word: "GIVE",     en: "Please give me",          ml: "ദയവായി എനിക്ക് തരൂ",           conf: 86 },
+  { word: "HELP",     en: "Please help me",          ml: "ദയവായി എന്നെ സഹായിക്കൂ",       conf: 95 },
+  { word: "MEDICINE", en: "I need medicine",         ml: "എനിക്ക് മരുന്ന് വേണം",         conf: 83 },
+  { word: "WANT",     en: "I want something",        ml: "എനിക്ക് എന്തോ വേണം",           conf: 89 },
 ];
 
 const WAVE_H = [14,22,30,18,36,28,16,32,24,20,34,18,26,30,16,22,28,14,32,20];
+
+/* landmark names for the 21 MediaPipe hand points */
+const LANDMARK_NAMES = [
+  "Wrist",
+  "Thumb CMC","Thumb MCP","Thumb IP","Thumb Tip",
+  "Index MCP","Index PIP","Index DIP","Index Tip",
+  "Middle MCP","Middle PIP","Middle DIP","Middle Tip",
+  "Ring MCP","Ring PIP","Ring DIP","Ring Tip",
+  "Pinky MCP","Pinky PIP","Pinky DIP","Pinky Tip",
+];
 
 /* ══════════════════════════════════════════════
    UI COMPONENTS
@@ -387,120 +135,182 @@ function Donut({ pct }) {
    MAIN APP
    ══════════════════════════════════════════════ */
 export default function Signora() {
-  const [current, setCurrent] = useState(SIGNS[0]);
-  const [features, setFeatures] = useState([]);
-  const [camActive, setCamActive] = useState(false);
-  const [camMode, setCamMode]   = useState("idle");
-  const [wordAnim, setWordAnim] = useState(false);
-  const videoRef  = useRef(null);
-  //const canvasRef = useRef(null);
-  const streamRef = useRef(null);
-  const timerRef  = useRef(null);
-  const idxRef    = useRef(1);
+  const [current, setCurrent]       = useState(SIGNS[0]);
+  const [camActive, setCamActive]   = useState(false);
+  const [camMode, setCamMode]       = useState("idle");
+  const [wordAnim, setWordAnim]     = useState(false);
+  const [handDetected, setHandDetected] = useState(false);
+  const [landmarks, setLandmarks]   = useState([]);
+  const [features, setFeatures]     = useState([]);
 
-  useEffect(() => {
-    if (!camActive) return;
-    timerRef.current = setInterval(() => {
-      const s = SIGNS[idxRef.current % SIGNS.length]; idxRef.current++;
-      setWordAnim(true);
-      setTimeout(() => { setCurrent(s); setWordAnim(false); }, 200);
-    }, 2400);
-    return () => clearInterval(timerRef.current);
-  }, [camActive]);
+  const videoRef  = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const handsRef  = useRef(null);
+  const rafRef    = useRef(null);
+  const camActiveRef = useRef(false); // ← ref so processFrame always sees current value
+
+  /* ── MediaPipe setup ── */
+  function initMediaPipe() {
+    // ✅ FIX: use window.Hands (loaded from index.html <script> tag)
+    const hands = new window.Hands({
+      locateFile: (file) =>
+        `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`,
+    });
+
+    hands.setOptions({
+      maxNumHands: 2,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.5,
+    });
+
+    hands.onResults((results) => {
+      const canvas = canvasRef.current;
+      const video  = videoRef.current;
+      if (!canvas || !video) return;
+
+      canvas.width  = video.videoWidth  || canvas.offsetWidth;
+      canvas.height = video.videoHeight || canvas.offsetHeight;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const fingerColors = ["#f87171","#fb923c","#facc15","#4ade80","#60a5fa"];
+        const fingerOf = (i) => i === 0 ? 0 : Math.ceil(i / 4) - 1;
+ 
+        // loop over every detected hand (up to 2)
+        results.multiHandLandmarks.forEach((lms) => {
+          window.drawConnectors(ctx, lms, window.HAND_CONNECTIONS, {
+            color: "#a78bfa",
+            lineWidth: 2,
+          });
+ 
+          lms.forEach((lm, i) => {
+            const x = lm.x * canvas.width;
+            const y = lm.y * canvas.height;
+            const color = fingerColors[fingerOf(i)];
+ 
+            ctx.beginPath();
+            ctx.arc(x, y, i === 0 ? 6 : 4, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+ 
+            if ([4,8,12,16,20].includes(i)) {
+              ctx.beginPath();
+              ctx.arc(x, y, 7, 0, 2 * Math.PI);
+              ctx.strokeStyle = color;
+              ctx.lineWidth = 2.5;
+              ctx.stroke();
+            }
+          });
+        });
+ 
+        // use first hand for feature extraction / landmarks panel
+        const primaryLms = results.multiHandLandmarks[0];
+        const flat = primaryLms.flatMap((lm) => [lm.x, lm.y, lm.z]);
+        setFeatures(flat);
+        setLandmarks(primaryLms);
+        setHandDetected(true);
+      } else {
+        setHandDetected(false);
+        setLandmarks([]);
+        setFeatures([]);
+      }
+    });
+ 
+    handsRef.current = hands;
+  }
+
+  /* ── send frames to MediaPipe ── */
+  async function processFrame() {
+    if (
+      camActiveRef.current &&           // ✅ FIX: use ref, not state
+      handsRef.current &&
+      videoRef.current &&
+      videoRef.current.readyState >= 2
+    ) {
+      await handsRef.current.send({ image: videoRef.current });
+    }
+    if (camActiveRef.current) {         // ✅ only keep looping if camera is on
+      rafRef.current = requestAnimationFrame(processFrame);
+    }
+  }
 
   async function startCam() {
     setCamActive(true);
+    camActiveRef.current = true;        // ✅ set ref immediately
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
-      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); 
-        //initializeHandTracking();
-         }
-      setCamMode("live");
-    } catch { setCamMode("demo"); }
-  }
-  /*function initializeHandTracking() {
-
-  const hands = new mpHands.Hands({
-    locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-  });
-
-  hands.setOptions({
-    maxNumHands: 1,
-    minDetectionConfidence: 0.7,
-    minTrackingConfidence: 0.7,
-  });
-
-  hands.onResults((results) => {
-
-    const canvas = canvasRef.current;
-
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    ctx.clearRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    if (results.multiHandLandmarks) {
-
-      const landmarks =
-        results.multiHandLandmarks[0];
-
-      drawConnectors(
-        ctx,
-        landmarks,
-        mpHands.HAND_CONNECTIONS
-      );
-
-      drawLandmarks(
-        ctx,
-        landmarks
-      );
-
-      let arr = [];
-
-      landmarks.forEach((lm) => {
-
-        arr.push(lm.x);
-        arr.push(lm.y);
-        arr.push(lm.z);
-
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480, facingMode: "user" },
       });
+      streamRef.current = stream;
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        await video.play();
+      }
+      setCamMode("live");
 
-      setFeatures(arr);
-
-      console.log(
-        "Features:",
-        arr.length
-      );
-
+      initMediaPipe();
+      rafRef.current = requestAnimationFrame(processFrame);
+    } catch (e) {
+      console.error("Camera error:", e);
+      setCamMode("demo");
     }
-
-  });
-
-}*/
+  }
 
   function stopCam() {
-    setCamActive(false); setCamMode("idle");
-    if (streamRef.current) { streamRef.current.getTracks().forEach(t=>t.stop()); streamRef.current=null; }
-    clearInterval(timerRef.current);
-    setCurrent(SIGNS[0]); idxRef.current=1;
+    camActiveRef.current = false;       // ✅ stop the loop via ref
+    setCamActive(false);
+    setCamMode("idle");
+    setHandDetected(false);
+    setLandmarks([]);
+    setFeatures([]);
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (handsRef.current) { handsRef.current.close(); handsRef.current = null; }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+
+    const canvas = canvasRef.current;
+    if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+
+    setCurrent(SIGNS[0]);
   }
 
   function speak() {
     if ("speechSynthesis" in window) {
       const u = new SpeechSynthesisUtterance(current.ml);
-      speechSynthesis.cancel(); speechSynthesis.speak(u);
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
     }
   }
 
-  const gesture = GESTURE_MAP[current.word] || <HandFood/>;
+  // cleanup on unmount
+  useEffect(() => {
+    return () => {
+      camActiveRef.current = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (handsRef.current) handsRef.current.close();
+      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
+  const KEY_LANDMARKS = [
+    { idx: 4,  label: "Thumb Tip",   color: "#f87171" },
+    { idx: 8,  label: "Index Tip",   color: "#fb923c" },
+    { idx: 12, label: "Middle Tip",  color: "#facc15" },
+    { idx: 16, label: "Ring Tip",    color: "#4ade80" },
+    { idx: 20, label: "Pinky Tip",   color: "#60a5fa" },
+    { idx: 0,  label: "Wrist",       color: "#c084fc" },
+  ];
 
   return (
     <>
@@ -513,6 +323,7 @@ export default function Signora() {
         @keyframes pop{0%{transform:scale(0.75);opacity:0}100%{transform:scale(1);opacity:1}}
         @keyframes floaty{0%,100%{transform:translateY(0)rotate(0deg)}50%{transform:translateY(-9px)rotate(7deg)}}
         @keyframes gestureIn{0%{transform:scale(0.8) rotate(-6deg);opacity:0}100%{transform:scale(1) rotate(0deg);opacity:1}}
+        @keyframes pulseRing{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.5);opacity:0}}
         .word-pop{animation:pop .22s ease;}
         .gesture-in{animation:gestureIn .35s cubic-bezier(.34,1.56,.64,1);}
         .amb{position:fixed;pointer-events:none;z-index:0;opacity:.08;animation:floaty 7s ease-in-out infinite;font-family:serif;}
@@ -520,6 +331,7 @@ export default function Signora() {
         .speak-btn:active{transform:translate(1px,1px)!important;box-shadow:1px 1px 0 #1a1a2e!important;}
         .act-btn:hover{transform:translate(-2px,-2px)!important;box-shadow:4px 4px 0 #1a1a2e!important;}
         .act-btn:active{transform:translate(1px,1px)!important;box-shadow:1px 1px 0 #1a1a2e!important;}
+        .pulse-ring{animation:pulseRing 1.2s ease-out infinite;}
         ::-webkit-scrollbar{display:none;}
       `}</style>
 
@@ -545,11 +357,17 @@ export default function Signora() {
 
         {/* ── HEADER ── */}
         <div style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",padding:"2px 0"}}>
-          {/* ILY hand */}
-          <div style={{position:"absolute",left:0,top:-6,pointerEvents:"none"}}>
-            <HandILY/>
+          <div style={{
+            position:"absolute",left:0,top:-6,
+            width:97,height:142,
+            border:"2px dashed #c4b5fd",borderRadius:14,background:"#f5f3ff",
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            gap:4,pointerEvents:"none"
+          }}>
+            <span style={{fontSize:"1.4rem",opacity:0.35}}>🖼️</span>
+            <span style={{fontFamily:"'Patrick Hand',cursive",fontSize:"0.65rem",color:"#c4b5fd",textAlign:"center"}}>logo / image</span>
           </div>
-          {/* title center */}
+
           <div style={{textAlign:"center"}}>
             <div style={{
               fontFamily:"'Baloo 2',cursive",fontWeight:900,
@@ -567,16 +385,10 @@ export default function Signora() {
                 display:"inline-block",background:"#fde68a",border:"2px solid #2d2d3a",
                 borderRadius:999,padding:"2px 18px",fontFamily:"'Patrick Hand',cursive",
                 fontSize:"0.92rem",fontWeight:700,marginTop:3,boxShadow:"2px 2px 0 #2d2d3a"
-              }}>Bridging Silence Through AI</span>
-            </div>
-            <div style={{fontFamily:"'Patrick Hand',cursive",fontSize:"0.84rem",color:"#6b7280",marginTop:2,
-              display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
-              <span style={{width:6,height:6,borderRadius:"50%",background:"#fb7185",display:"inline-block"}}/>
-              Hospital Communication Assistant
-              <span style={{width:6,height:6,borderRadius:"50%",background:"#fb7185",display:"inline-block"}}/>
+              }}>Hear My Hands</span>
             </div>
           </div>
-          {/* speech bubble */}
+
           <div style={{
             position:"absolute",right:0,top:0,background:"white",
             border:"2px solid #c4b5fd",borderRadius:"16px 16px 4px 16px",
@@ -596,7 +408,7 @@ export default function Signora() {
               English <span style={{fontWeight:400,fontSize:".78rem"}}>(Detected Meaning)</span>
             </Pill>
             <div style={{
-              border:"2px dashed #d1d5db",borderRadius:12,padding:"8px 12px 8px 12px",
+              border:"2px dashed #d1d5db",borderRadius:12,padding:"8px 12px",
               background:"#fafafa",fontFamily:"'Patrick Hand',cursive",fontSize:"1.08rem",
               color:"#1e1b4b",position:"relative",flexShrink:0,minHeight:52
             }}>
@@ -613,7 +425,7 @@ export default function Signora() {
               Malayalam <span style={{fontWeight:400,fontSize:".78rem"}}>(Translation)</span>
             </Pill>
             <div style={{
-              border:"2px dashed #f9a8d4",borderRadius:12,padding:"8px 12px 8px 12px",
+              border:"2px dashed #f9a8d4",borderRadius:12,padding:"8px 12px",
               background:"#fff5f8",fontFamily:"'Patrick Hand',cursive",fontSize:"1.08rem",
               color:"#1e1b4b",position:"relative",flexShrink:0,minHeight:52
             }}>
@@ -630,7 +442,7 @@ export default function Signora() {
             }}>
               <div style={{width:38,height:38,borderRadius:"50%",background:"#a78bfa",
                 display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem",flexShrink:0}}>🔊</div>
-              <Waveform active={camActive}/>
+              <Waveform active={camActive && handDetected}/>
             </div>
 
             <button className="speak-btn" onClick={speak} style={{
@@ -648,24 +460,27 @@ export default function Signora() {
           <Card accent="#f9a8d4">
             <CardTitle>
               📷 Live Detection
-              <svg width="16" height="16" viewBox="0 0 20 20" style={{opacity:.6}}>
-                <path d="M12 2 L6 11 L10 11 L8 18 L14 9 L10 9 Z" fill="#fde68a" stroke="#2d2d3a" strokeWidth="1.5"/>
-              </svg>
+              {handDetected && (
+                <span style={{position:"relative",display:"inline-flex",alignItems:"center",justifyContent:"center",width:12,height:12}}>
+                  <span className="pulse-ring" style={{position:"absolute",width:12,height:12,borderRadius:"50%",background:"#4ade80"}}/>
+                  <span style={{width:8,height:8,borderRadius:"50%",background:"#4ade80",zIndex:1}}/>
+                </span>
+              )}
             </CardTitle>
 
-            {/* Camera */}
             <div style={{
               flex:1,minHeight:0,border:"2.5px solid #2d2d3a",borderRadius:14,
-              overflow:"hidden",position:"relative",background:"#c8c8c0"
+              overflow:"hidden",position:"relative",background:"#1a1a2e"
             }}>
               {[{top:8,right:9,borderWidth:"2.5px 2.5px 0 0",borderRadius:"0 4px 0 0"},
                 {bottom:9,left:8,borderWidth:"0 0 2.5px 2.5px",borderRadius:"0 0 0 4px"}
               ].map((s,i)=>(
                 <div key={i} style={{position:"absolute",width:20,height:20,
-                  borderColor:"white",borderStyle:"solid",zIndex:2,...s}}/>
+                  borderColor:"white",borderStyle:"solid",zIndex:4,...s}}/>
               ))}
+
               {camActive && (
-                <div style={{position:"absolute",top:8,left:10,zIndex:3,background:"white",
+                <div style={{position:"absolute",top:8,left:10,zIndex:4,background:"white",
                   border:"1.5px solid #e5e7eb",borderRadius:999,padding:"2px 9px",
                   fontFamily:"'Patrick Hand',cursive",fontSize:".84rem",fontWeight:700,
                   display:"flex",alignItems:"center",gap:5}}>
@@ -673,14 +488,36 @@ export default function Signora() {
                     animation:"blink 1s step-end infinite",display:"inline-block"}}/> REC
                 </div>
               )}
-              <video ref={videoRef} muted style={{
+
+              {camActive && (
+                <div style={{position:"absolute",top:8,right:10,zIndex:4,
+                  background: handDetected ? "#dcfce7" : "rgba(255,255,255,0.7)",
+                  border:`1.5px solid ${handDetected ? "#4ade80" : "#e5e7eb"}`,
+                  borderRadius:999,padding:"2px 8px",
+                  fontFamily:"'Patrick Hand',cursive",fontSize:".78rem",fontWeight:700,
+                  display:"flex",alignItems:"center",gap:4,transition:"all .3s"}}>
+                  <span>{handDetected ? "✋ Hand found" : "🤚 No hand"}</span>
+                </div>
+              )}
+
+              <video ref={videoRef} muted playsInline style={{
                 position:"absolute",inset:0,width:"100%",height:"100%",
-                objectFit:"cover",borderRadius:12,display:camMode==="live"?"block":"none"
+                objectFit:"cover",borderRadius:12,
+                display:camMode==="live"?"block":"none",
+                transform:"scaleX(-1)",
               }}/>
+
+              <canvas ref={canvasRef} style={{
+                position:"absolute",inset:0,width:"100%",height:"100%",
+                borderRadius:12,zIndex:3,
+                display:camMode==="live"?"block":"none",
+                transform:"scaleX(-1)",
+              }}/>
+
               {camMode==="demo" && (
                 <div style={{position:"absolute",inset:0,background:"#b0b0a8",
                   display:"flex",alignItems:"center",justifyContent:"center",borderRadius:12}}>
-                  <span style={{fontFamily:"'Patrick Hand',cursive",fontSize:".95rem",color:"#555",opacity:.8}}>📷 Demo mode</span>
+                  <span style={{fontFamily:"'Patrick Hand',cursive",fontSize:".95rem",color:"#555"}}>📷 Demo mode</span>
                 </div>
               )}
               {camMode==="idle" && (
@@ -691,12 +528,10 @@ export default function Signora() {
                   </span>
                 </div>
               )}
+
               <div style={{position:"absolute",bottom:8,left:10,fontSize:"1.1rem",zIndex:2}}>⭐</div>
-              <div style={{position:"absolute",bottom:8,right:10,fontSize:".85rem",zIndex:2,
-                background:"rgba(255,255,255,.6)",borderRadius:7,padding:"2px 5px"}}>📷</div>
             </div>
 
-            {/* Start/Stop */}
             <div style={{display:"flex",gap:8,flexShrink:0}}>
               {!camActive
                 ? <button className="act-btn" onClick={startCam} style={{
@@ -714,7 +549,6 @@ export default function Signora() {
               }
             </div>
 
-            {/* Detected sign box */}
             <div style={{border:"2px dashed #f9a8d4",borderRadius:14,padding:"8px 12px",
               textAlign:"center",background:"white",flexShrink:0}}>
               <span style={{display:"inline-block",border:"1.5px solid #2d2d3a",borderRadius:999,
@@ -730,15 +564,24 @@ export default function Signora() {
               </div>
               <div style={{fontFamily:"'Patrick Hand',cursive",fontSize:".82rem",color:"#6b7280",
                 display:"flex",alignItems:"center",justifyContent:"center",gap:4,marginTop:2}}>
-                <svg width="16" height="10" viewBox="0 0 20 12">
-                  <path d="M2 6 C6 2,10 10,14 6 L18 8" stroke="#9ca3af" strokeWidth="1.5" fill="none"/>
-                  <polygon points="18,8 14,5 14,11" fill="#9ca3af"/>
-                </svg>
-                Keep showing the sign… ♡
+                {handDetected
+                  ? <span style={{color:"#4ade80",fontWeight:700}}>✓ Hand tracking active</span>
+                  : <span>Show your hand to the camera… ♡</span>
+                }
               </div>
             </div>
 
-            {/* blob */}
+            {features.length > 0 && (
+              <div style={{
+                background:"#f0fdf4",border:"1.5px solid #4ade80",borderRadius:10,
+                padding:"4px 10px",fontFamily:"'Patrick Hand',cursive",fontSize:".8rem",
+                color:"#166534",display:"flex",alignItems:"center",gap:6,flexShrink:0
+              }}>
+                <span style={{width:8,height:8,borderRadius:"50%",background:"#4ade80",flexShrink:0}}/>
+                {features.length} features captured (21 pts × xyz) — ready for model
+              </div>
+            )}
+
             <div style={{display:"flex",justifyContent:"flex-end",flexShrink:0}}>
               <svg width="52" height="52" viewBox="0 0 52 52">
                 <path d="M26 5 C36 3,46 9,48 19 C50 29,46 42,36 47 C26 52,13 48,7 40 C1 32,3 18,9 12 C15 6,16 7,26 5 Z"
@@ -757,7 +600,6 @@ export default function Signora() {
             <CardTitle>🤖 Trained Model Insights</CardTitle>
             <div style={{position:"absolute",top:10,right:14,fontSize:"1.3rem",pointerEvents:"none"}}>💡</div>
 
-            {/* Predicted sign + gesture illustration */}
             <div style={{flexShrink:0}}>
               <Pill bg="#ede9fe">Predicted Sign</Pill>
               <div style={{
@@ -768,14 +610,12 @@ export default function Signora() {
                 <div style={{fontFamily:"'Baloo 2',cursive",fontSize:"1.8rem",fontWeight:900,color:"#7c3aed"}}>
                   {current.word}
                 </div>
-                {/* GESTURE ILLUSTRATION */}
-                <div className={wordAnim?"gesture-in":""} style={{flexShrink:0}}>
-                  {gesture}
+                <div className={wordAnim ? "gesture-in" : ""}>
+                  <SignImage word={current.word} />
                 </div>
               </div>
             </div>
 
-            {/* Confidence */}
             <div style={{flexShrink:0}}>
               <Pill bg="#fefce8">Confidence</Pill>
               <div style={{display:"flex",alignItems:"center",gap:10,marginTop:5}}>
@@ -787,32 +627,43 @@ export default function Signora() {
               </div>
             </div>
 
-            {/* Key Landmarks */}
             <div style={{flexShrink:0}}>
-              <Pill bg="#d1fae5">Key Landmarks <span style={{fontWeight:400}}>(Used)</span></Pill>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginTop:5}}>
-                <div style={{flex:1}}>
-                  {[["#22c55e","Thumb Tip"],["#ef4444","Index Tip"]].map(([c,l])=>(
-                    <div key={l} style={{display:"flex",alignItems:"center",gap:7,
-                      fontFamily:"'Patrick Hand',cursive",fontSize:".92rem",marginBottom:4}}>
-                      <span style={{width:10,height:10,borderRadius:"50%",background:c,display:"inline-block",flexShrink:0}}/>
-                      {l}
+              <Pill bg="#d1fae5">Key Landmarks <span style={{fontWeight:400}}>(Live)</span></Pill>
+              <div style={{marginTop:5,display:"flex",flexDirection:"column",gap:3}}>
+                {KEY_LANDMARKS.map(({ idx, label, color }) => {
+                  const lm = landmarks[idx];
+                  return (
+                    <div key={label} style={{display:"flex",alignItems:"center",gap:6,
+                      fontFamily:"'Patrick Hand',cursive",fontSize:".8rem"}}>
+                      <span style={{width:9,height:9,borderRadius:"50%",background:color,
+                        display:"inline-block",flexShrink:0}}/>
+                      <span style={{flex:1,color:"#374151"}}>{label}</span>
+                      {lm ? (
+                        <span style={{color:"#6b7280",fontFamily:"monospace",fontSize:".72rem"}}>
+                          {lm.x.toFixed(2)}, {lm.y.toFixed(2)}
+                        </span>
+                      ) : (
+                        <span style={{color:"#d1d5db",fontSize:".72rem"}}>—</span>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Reason */}
             <div style={{flex:1,minHeight:0}}>
               <Pill bg="#fce7f3">Reason <span style={{fontWeight:400}}>(Model Interpretation)</span></Pill>
               <div style={{border:"1.5px dashed #fca5a5",borderRadius:12,
                 padding:"8px 12px",background:"#fff8f8",marginTop:5}}>
-                {[
-                  "Thumb and index finger formed a pinch-like shape",
+                {(handDetected ? [
+                  `${features.length} landmark values extracted`,
                   `Gesture most similar to ${current.word} training data`,
-                  "Similarity score: 91%"
-                ].map((r,i)=>(
+                  "Connect backend to get real prediction"
+                ] : [
+                  "Waiting for hand in frame…",
+                  "MediaPipe tracking ready",
+                  "Show hand to camera to extract landmarks"
+                ]).map((r,i)=>(
                   <div key={i} style={{fontFamily:"'Patrick Hand',cursive",fontSize:".9rem",
                     lineHeight:1.4,color:"#1e1b4b",paddingLeft:13,position:"relative",marginBottom:i<2?5:0}}>
                     <span style={{position:"absolute",left:2,color:"#fb7185"}}>•</span>{r}
@@ -826,8 +677,8 @@ export default function Signora() {
             </div>
           </Card>
 
-        </div>{/* /grid */}
-      </div>{/* /page */}
+        </div>
+      </div>
     </>
   );
 }
